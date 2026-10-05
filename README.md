@@ -28,7 +28,7 @@ Then in any session:
 @skills:pstack <your task>
 ```
 
-For organization-wide install, upload the plugin at account scope (Devin → Plugins → upload), or install the repo URL under your org's plugin settings.
+For organization-wide install, install the repo URL under your org's plugin settings. Avoid also installing an uploaded copy — two installs register duplicate `pstack` skills, and uploads diverge from this repo's versioning.
 
 ## How it maps to Cursor
 
