@@ -5,17 +5,21 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="${1:-}"
+MODE="${1:-}"
 
-if [[ "$SRC" == "--cursor" ]]; then
-  TMP="$(mktemp -d)"
-  trap 'rm -rf "$TMP"' EXIT
+case "$MODE" in
+  ""|--cursor) ;;
+  *) echo "usage: $0 [--cursor]" >&2; exit 2 ;;
+esac
+
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+if [[ "$MODE" == "--cursor" ]]; then
   git clone --depth 1 --filter=blob:none --sparse https://github.com/cursor/plugins.git "$TMP/cursor-plugins"
   git -C "$TMP/cursor-plugins" sparse-checkout set pstack
   UPSTREAM_SKILLS="$TMP/cursor-plugins/pstack/skills"
 else
-  TMP="$(mktemp -d)"
-  trap 'rm -rf "$TMP"' EXIT
   git clone --depth 1 https://github.com/backnotprop/pstack.git "$TMP/pstack"
   UPSTREAM_SKILLS="$TMP/pstack/skills"
 fi
@@ -36,5 +40,5 @@ if [[ -d "$UPSTREAM_AGENTS" ]]; then
   rsync -a --delete "$UPSTREAM_AGENTS/" "$REPO_ROOT/skills/pstack/agents/"
 fi
 
-echo "Synced from ${SRC:-backnotprop/pstack}. Review the diff, bump .devin-plugin/plugin.json version, commit, and re-install."
+echo "Synced from ${MODE:-backnotprop/pstack}. Review the diff, bump .devin-plugin/plugin.json version, commit, and re-install."
 git -C "$REPO_ROOT" status --short | head -30

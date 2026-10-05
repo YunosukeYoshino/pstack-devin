@@ -12,7 +12,7 @@ Devin keeps exactly **one skill active** at a time: invoking another skill repla
 - **`lib/`** — the complete pstack skill library (all 46 leaf skills, verbatim from upstream). When the adapter routes to "the `how` skill", the session reads `lib/how/SKILL.md` as a file instead of invoking a skill — so routing never disturbs the active skill.
 - **`skills/pstack/{playbooks,references,scripts,agents}`** — poteto-mode's 23 playbooks and supporting files, verbatim.
 
-Because the library is bundled as real files inside the plugin, installed plugins materialize under `~/.devin/plugins/cache/` and every reference resolves on disk.
+Because the library is bundled as real files inside the plugin, installed plugins materialize under `~/.devin/plugins/cache/` (per session — a fresh session after install is what materializes them) and every reference resolves on disk. If the find anchor in the skill comes back empty on an older session, start a fresh session; the adapter says so itself when it happens.
 
 ## Install
 
