@@ -23,7 +23,7 @@ PSTACK_DIR=${PSTACK_LIB%/lib}              # -> plugin root
 # references: $PSTACK_DIR/skills/pstack/references/
 ```
 
-If that comes back empty, retry `find ~ -type f -path '*/lib/poteto-mode/SKILL.md'`. Still empty means the pstack-devin plugin did not materialize — tell the user and continue with the inline rules below.
+If that comes back empty, wait ~15 seconds and retry — plugin files materialize at session start and can lag behind the first command (`find` on a still-populating cache shows only `.tmp*` dirs). Then retry `find ~ -type f -path '*/lib/poteto-mode/SKILL.md'`. Still empty means the pstack-devin plugin did not materialize — tell the user and continue with the inline rules below.
 
 Path resolution contract — applies to every trigger, principle, and playbook mention in this file **and to any lib file that itself names another skill**:
 
