@@ -1,0 +1,20 @@
+領域	本家 (Cursor pstack)	Devin adapter	差の実質影響
+Skill 起動	poteto-mode は mode: true の常駐 skill。内部から他 skill を自由に invoke して合成する	one-active-skill 制約のため1枚に統合。@skills:pstack で起動、内部は lib/*.md のファイル読みで合成を再現	ほぼ等価。leaf skill は「active」にならないが中身は全文読み込みで同じ指示が効く
+Skill 解決	"the how skill" で harness が skill を inject	"the how skill" → lib/how/SKILL.md を read。references/ も leaf の dir 相対で解決	等価。file routing は実測ゼロミス
+leaf skill の個別利用	個別に invoke 可能	可能（org に元の pstack plugin も残ってる）。adapter と併用可	なし
+Subagent 生成	Task tool。subagent_type: poteto-agent / generalPurpose、environment: "cloud" で Cursor cloud agent	devin_session_create（子セッション = 専用 VM + 独自 git 認証）。run_subagent は現行 Devin には実質なし	子がより重い（VM 単位）。軽い helper は inline 実行になる
+poteto-agent 種別	登録済み agent type として spawn	レジストリなし。子プロンプト先頭に "find で SKILL.md を探して全文読め" の preamble を付ける	等価に近いが preamble 依存（ enforced でなく指示 ）
+readonly 指定	Task の readonly フラグで MCP を剥がす	devin_session_create に同等引数なし。brief の文言で advisory	強制 → お願いに弱まる。真の read-only 境界はない
+model 指定	pstack-models で role 別 model（grok-4.7-xhigh-fast / claude-opus-5-5-max 等）	devin_mode マッピング（lite/fast/normal/fusion/ultra）。ただし mode-locked/free 親では子の mode 変更が reject され inherit に	role 別 model 分離が環境次第で潰れる。fallback は serial 実行
+同時 fan-out	swarm/arena が cloud agent を自由に spawn	子セッション並列起動。concurrency cap (429) に当たり得る	大 fan-out は quota に依存。fallback で serial に落ちる設計済み
+ユーザーへの質問	AskQuestion tool	message_user (content_type=user_question) で選択肢カード	等価以上（UI カード）
+transcript 参照	agent-transcripts/ のローカルファイル	devin_session_events / devin_session_search / interact（org セッション検索つき）	機能は同等、範囲はむしろ広い
+PR 作成・監視	gh / origin CLI + scripts/watch-pr + /loop で polling	builtin git tools (git_create_pr / git_pr_checks / git_view_pr) が native。playbook 本文の gh/watch-pr も gh があれば動く	二本立て。builtin 側が確実（gh は GHES で不可）
+review bot	Bugbot comments	Devin Review comments	等価。triaging 手順 (bugbot-triage.md) はそのまま流用可
+deslop / control-*	cursor-team-kit plugin に依存	deslop→commit 前に自分で diff 読み直し。control-cli/ui→computer tool / Playwright CDP / testing_agent	機能は担保。自動化度は下がる
+skill 自作	create-skill (Cursor 内蔵)	manage_plugin(kind=skill) または repo の .devin/skills/	等価
+skill 配置	.cursor/skills (project), ~/.cursor/skills (user)	.devin/skills (repo)。user/org 横断は uploaded plugin	配置先の形だけ違う
+/loop	内蔵。dynamic mode で長期 watch	wait tool / devin_automation_manage の schedule trigger	等価（自動化はむしろ強い）
+diff/verify	同一 repo で Task subagent に委譲	子セッション or 自分で serial 実行。testing_agent で UI 記録	等価
+実行原則	Non-negotiables / 23 principles / Autonomy / Writing the reply / Comments / 23 playbooks	全文 verbatim	完全一致
+ベースバージョン	本家 cursor/plugins pstack	v0.15.2 mirror（backnotprop/pstack）ベース。org の pstack plugin と同一ソース	本家最新 0.15.5 との差分あり（52 files、full-autonomy 条項・model default 更新等）

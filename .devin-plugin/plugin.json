@@ -1,0 +1,5 @@
+{
+  "name": "pstack-devin",
+  "version": "0.15.2-devin.1",
+  "description": "Devin adapter for pstack poteto-mode: one active skill that reads the bundled pstack library (lib/, playbooks/) from disk instead of invoking other skills."
+}
