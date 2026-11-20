@@ -50,6 +50,8 @@ The adapter preserves pstack's content verbatim and rewrites only the harness su
 
 Review the diff, bump `version` in `.devin-plugin/plugin.json`, commit, and re-install the plugin (or re-upload it) to pick up changes.
 
+This runs on its own: every Monday `.github/workflows/upstream-check.yml` opens an `upstream-sync` issue when upstream has a newer version, and a Devin Automation turns that issue into a sync PR. [docs/SYNCING.md](docs/SYNCING.md) has the steps.
+
 ## License
 
 MIT — inherited from upstream ([Lauren Tan](LICENSE)). `lib/` is verbatim upstream content; adapter edits are in `skills/pstack/SKILL.md`.
