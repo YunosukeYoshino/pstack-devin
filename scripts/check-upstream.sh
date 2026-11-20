@@ -19,14 +19,22 @@ if [[ "$local_ver" == "$upstream_ver" ]] || \
   exit 0
 fi
 
-open_issue="$(gh issue list -R "${GITHUB_REPOSITORY:-YunosukeYoshino/pstack-devin}" --label "$LABEL" --state open --json number --jq '.[0].number // empty')"
+REPO="${GITHUB_REPOSITORY:-YunosukeYoshino/pstack-devin}"
+open_issue="$(gh issue list -R "$REPO" --label "$LABEL" --state open --json number --jq '.[0].number // empty')"
 if [[ -n "$open_issue" ]]; then
-  if gh issue view "$open_issue" -R "${GITHUB_REPOSITORY:-YunosukeYoshino/pstack-devin}" --json title --jq .title | grep -qF "$upstream_ver"; then
+  # The title's trailing version records the latest version already notified.
+  if gh issue view "$open_issue" -R "$REPO" --json title --jq .title | grep -qE " ${upstream_ver//./\\.}\$"; then
     echo "Issue #$open_issue already tracks $upstream_ver."
-  else
-    gh issue comment "$open_issue" -R "${GITHUB_REPOSITORY:-YunosukeYoshino/pstack-devin}" --body "Upstream moved to **$upstream_ver** (\`${upstream_sha:0:7}\`). Sync to the latest upstream when working this issue."
-    echo "Commented on #$open_issue."
+    exit 0
   fi
+  comment="Upstream moved to **$upstream_ver** (\`${upstream_sha:0:7}\`). Sync to the latest upstream when working this issue."
+  if [[ -n "${DRY_RUN:-}" ]]; then
+    printf 'Would retitle #%s and comment:\n%s\n' "$open_issue" "$comment"
+    exit 0
+  fi
+  gh issue edit "$open_issue" -R "$REPO" --title "Sync upstream pstack $local_ver → $upstream_ver"
+  gh issue comment "$open_issue" -R "$REPO" --body "$comment"
+  echo "Retitled and commented on #$open_issue."
   exit 0
 fi
 
@@ -43,7 +51,7 @@ else
   poteto="**Yes.** Re-apply the upstream changes to \`skills/pstack/SKILL.md\`."
 fi
 
-[[ -n "${DRY_RUN:-}" ]] || gh label create "$LABEL" -R "${GITHUB_REPOSITORY:-YunosukeYoshino/pstack-devin}" --color 1d76db --description "Upstream pstack has a newer version" 2>/dev/null || true
+[[ -n "${DRY_RUN:-}" ]] || gh label create "$LABEL" -R "$REPO" --color 1d76db --description "Upstream pstack has a newer version" 2>/dev/null || true
 
 body="$(cat <<MD
 Upstream [\`$UPSTREAM\`](https://github.com/$UPSTREAM) is at **$upstream_ver** (\`${upstream_sha:0:7}\`). \`lib/\` is at **$local_ver**.
@@ -67,4 +75,4 @@ if [[ -n "${DRY_RUN:-}" ]]; then
   exit 0
 fi
 
-gh issue create -R "${GITHUB_REPOSITORY:-YunosukeYoshino/pstack-devin}" --title "Sync upstream pstack $local_ver → $upstream_ver" --label "$LABEL" --body "$body"
+gh issue create -R "$REPO" --title "Sync upstream pstack $local_ver → $upstream_ver" --label "$LABEL" --body "$body"
