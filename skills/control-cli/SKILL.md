@@ -80,7 +80,12 @@ while time.time() < deadline:
     ready, _, _ = select.select([master_fd], [], [], 0.25)
     if not ready:
         continue
-    chunk = os.read(master_fd, 4096)
+    try:
+        chunk = os.read(master_fd, 4096)
+    except OSError:
+        break  # child exited before ready; PTY drained (Linux raises EIO)
+    if not chunk:
+        break
     buffer += chunk
     if b"<ready text>" in buffer:
         os.write(master_fd, b"help\n")
