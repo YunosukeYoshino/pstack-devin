@@ -1,25 +1,25 @@
-領域	本家 (Cursor pstack)	Devin adapter	差の実質影響
-Skill 起動	poteto-mode は mode: true の常駐 skill。内部から他 skill を自由に invoke して合成する	@skills:pstack（adapter）で起動、内部は skills/*.md のファイル読みで合成を再現	ほぼ等価。leaf skill は「active」にならないが中身は全文読み込みで同じ指示が効く
-Skill 解決	"the how skill" で harness が skill を inject	"the how skill" → skills/how/SKILL.md を read。references/ も leaf の dir 相対で解決	等価。file routing は実測ゼロミス
-leaf skill の個別利用	個別に invoke 可能	可能。全 leaf を skills/<name>/ に配置し /<plugin>:<name> で直接 invoke できる（pstack-ports/devin-pstack と同じ UX）。adapter は引き続き file read で route	なし
-Subagent 生成	Task tool。subagent_type: poteto-agent / generalPurpose、environment: "cloud" で Cursor cloud agent	devin_session_create（子セッション = 専用 VM + 独自 git 認証）。run_subagent は現行 Devin には実質なし	子がより重い（VM 単位）。軽い helper は inline 実行になる
-poteto-agent 種別	登録済み agent type として spawn	レジストリなし。子プロンプト先頭に "find で SKILL.md を探して全文読め" の preamble を付ける	等価に近いが preamble 依存（ enforced でなく指示 ）
-readonly 指定	Task の readonly フラグで MCP を剥がす	devin_session_create に同等引数なし。brief の文言で advisory。generalPurpose / effort 等の他パラメータは drop	強制 → お願いに弱まる。真の read-only 境界はない
-model 指定	pstack-models で role 別 model（既定: code/prose/judgment は claude-opus-5-5-xhigh-fast、mechanical/verification は claude-opus-5-5-high-fast、panel は fable-5-2 / opus-5-5 / gemini-4-neon）	devin_mode マッピング（既定=normal、mechanical/verification=fast|lite、最難関=ultra、panel は ultra/fast/fusion に分散）。mode-locked/free 親では子の mode 変更が reject され inherit に	role 別 model 分離・vendor 多様性が環境次第で潰れる。panel は brief の多様化で代替
-同時 fan-out	swarm/arena が cloud agent を自由に spawn	子セッション並列起動。concurrency cap (429) に当たり得る	大 fan-out は quota に依存。fallback で serial に落ちる設計済み
-ユーザーへの質問	AskQuestion tool	message_user (content_type=user_question) で選択肢カード	等価以上（UI カード）
-transcript 参照	agent-transcripts/ のローカルファイル	devin_session_events / devin_session_search / interact（org セッション検索つき）	機能は同等、範囲はむしろ広い
-PR 作成・監視	gh / origin CLI + scripts/watch-pr + /loop で polling	builtin git tools (git_create_pr / git_pr_checks / git_view_pr) が native。playbook 本文の gh/watch-pr も gh があれば動く	二本立て。builtin 側が確実（gh は GHES で不可）
-review bot	Bugbot comments	Devin Review comments	等価。triaging 手順 (bugbot-triage.md) はそのまま流用可
-deslop / control-*	cursor-team-kit plugin に依存	skills/{deslop,control-cli,control-ui} として同梱（pstack-ports/devin-pstack から port）。実行 surface は computer tool / Playwright CDP / testing_agent	等価。skill 本体あり、driver だけ Devin native
-skill 自作	create-skill (Cursor 内蔵)	manage_plugin(kind=skill) または repo の .devin/skills/	等価
-skill 配置	.cursor/skills (project), ~/.cursor/skills (user)	.devin/skills (repo)。user/org 横断は uploaded plugin	配置先の形だけ違う
-/loop	内蔵。dynamic mode で長期 watch	wait tool / devin_automation_manage の schedule trigger	等価（自動化はむしろ強い）
-diff/verify	同一 repo で Task subagent に委譲	子セッション or 自分で serial 実行。testing_agent で UI 記録	等価
-実行原則	Non-negotiables / 24 principles / Autonomy / Subagents / Writing the reply / 22 playbooks	全文 verbatim	完全一致
-ベースバージョン	本家 cursor/plugins pstack	v0.15.44 mirror（backnotprop/pstack 4a4f41c）ベース	なし（最新 mirror に追従）
-worker.md kickoff	全 agent の kickoff 1行目が "Read <path>/worker.md before anything else."（operator ルールを delegate に届ける）	子プロンプト1行目で find ~/.devin/plugins/cache -path '*/pstack*/skills/poteto-mode/worker.md' | sort | head -1 を実行して読ませる（子 VM ではパスが違うので literal パスを渡さない）	等価。preamble 依存（enforced でなく指示）
-名前付き agent (comment-sicko 等)	subagent_type: "comment-sicko" で登録済み agent を spawn	skills/pstack/agents/<name>.md 全文を子 brief に貼る	等価に近い。registry でなく brief 依存
-environment: "local"	ユーザーのローカル PC 上で動く agent	request_local_machine + local_* tools を親が直接使う（子には渡せない）	承認ゲートつき。並列性は失う
-fresh subagent	追加ラウンドは新しい subagent に元 brief + 追加指示 + 前回 report/branch を渡す	新しい devin_session_create 子。状態が必要な時のみ devin_session_interact で既存子を再開	等価
-Custom Modes	Cursor の Custom Modes で poteto-mode を常駐	@skills:pstack が mode の代わり	なし（起動が明示的なだけ）
+Area	Upstream (Cursor pstack)	Devin adapter	Practical impact of the difference
+Skill activation	poteto-mode is a resident skill (mode: true) that invokes sibling skills freely to compose behavior	Activated via @skills:pstack (the adapter); internally composes by reading skills/*.md files	Near-equivalent. Leaf skills never become "active" but their full text is read, so the same instructions take effect
+Skill resolution	"the how skill" makes the harness inject the skill	"the how skill" -> read skills/how/SKILL.md. references/ resolve relative to the leaf dir	Equivalent. File routing has had zero misses in practice
+Individual leaf use	Each skill invocable on its own	Possible. Every leaf lives at skills/<name>/ and is directly invocable as /<plugin>:<name> (same UX as pstack-ports/devin-pstack). The adapter still routes via file read	None
+Subagent creation	Task tool. subagent_type: poteto-agent / generalPurpose, environment: "cloud" for Cursor cloud agents	devin_session_create (child session = dedicated VM + own git auth). run_subagent does not effectively exist in current Devin	Children are heavier (VM per delegate). Lightweight helpers run inline
+poteto-agent type	Spawned as a registered agent type	No registry. Child prompt starts with a preamble: "find the SKILL.md and read it in full"	Near-equivalent but depends on the preamble (instruction, not enforcement)
+readonly flag	Task's readonly flag strips MCP access	No equivalent argument on devin_session_create. Advisory only, via brief wording. Other params (generalPurpose / effort etc.) are dropped	Enforcement weakens to a request. No true read-only boundary
+Model selection	pstack-models assigns models per role (default: code/prose/judgment = claude-opus-5-5-xhigh-fast, mechanical/verification = claude-opus-5-5-high-fast, panel = fable-5-2 / opus-5-5 / gemini-4-neon)	devin_mode mapping (default=normal, mechanical/verification=fast|lite, hardest=ultra, panel spread across ultra/fast/fusion). On mode-locked/free parents, child mode changes are rejected and fall back to inherit	Per-role model separation and vendor diversity collapse depending on environment. Panel diversity replaced by diversifying briefs
+Concurrent fan-out	swarm/arena spawn cloud agents freely	Parallel child sessions. Can hit the concurrency cap (429)	Large fan-out depends on quota. Designed to fall back to serial
+Asking the user	AskQuestion tool	message_user (content_type=user_question) with clickable option cards	Equivalent or better (UI cards)
+Transcript access	Local files under agent-transcripts/	devin_session_events / devin_session_search / interact (includes org session search)	Functionally equal; coverage is broader
+PR creation/monitoring	gh / origin CLI + scripts/watch-pr + /loop polling	Builtin git tools (git_create_pr / git_pr_checks / git_view_pr) are native. The gh/watch-pr calls in playbook bodies also work when gh exists	Two paths. The builtin side is the reliable one (gh is unavailable on GHES)
+Review bot	Bugbot comments	Devin Review comments	Equivalent. The triaging procedure (bugbot-triage.md) transfers as is
+deslop / control-*	Depends on the cursor-team-kit plugin	Bundled as skills/{deslop,control-cli,control-ui} (ported from pstack-ports/devin-pstack). Execution surfaces: computer tool / Playwright CDP / testing_agent	Equivalent. Skill content present; only the driver is Devin-native
+Skill authoring	create-skill (Cursor builtin)	manage_plugin(kind=skill) or a .devin/skills/ dir in the repo	Equivalent
+Skill placement	.cursor/skills (project), ~/.cursor/skills (user)	.devin/skills (repo). Cross-user/org distribution via uploaded plugin	Same placement, different shape
+/loop	Builtin. Dynamic mode for long-running watches	wait tool / devin_automation_manage schedule trigger	Equivalent (automation is arguably stronger)
+diff/verify	Delegated to a Task subagent in the same repo	Child session or serial in-session work. testing_agent records UI	Equivalent
+Operating principles	Non-negotiables / 24 principles / Autonomy / Subagents / Writing the reply / 22 playbooks	Full text verbatim	Identical
+Base version	cursor/plugins pstack	Based on the v0.15.44 mirror (backnotprop/pstack 4a4f41c)	None (tracks the latest mirror)
+worker.md kickoff	Every agent kickoff starts with "Read <path>/worker.md before anything else." (delivers the operator rules to delegates)	First line of the child prompt runs find ~/.devin/plugins/cache -path '*/pstack*/skills/poteto-mode/worker.md' | sort | head -1 and reads the result (no literal path, since it differs on the child VM)	Equivalent. Depends on the preamble (instruction, not enforcement)
+Named agents (comment-sicko etc.)	Spawned via registered subagent_type: "comment-sicko"	Full text of skills/pstack/agents/<name>.md pasted into the child brief	Near-equivalent. Brief-dependent rather than registry
+environment: "local"	Agent runs on the user's local machine	The parent uses request_local_machine + local_* tools directly (cannot be handed to a child)	Approval-gated. Loses parallelism
+fresh subagent	Further rounds spawn a new subagent with the original brief + new instructions + previous report/branch	A new devin_session_create child. Only re-open an existing child via devin_session_interact when state is needed	Equivalent
+Custom Modes	Cursor Custom Modes keep poteto-mode resident	@skills:pstack stands in for the mode	None (just an explicit activation)
