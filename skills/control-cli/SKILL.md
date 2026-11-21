@@ -82,8 +82,8 @@ while time.time() < deadline:
     ready, _, _ = select.select([master_fd], [], [], 0.25)
     if not ready:
         quiet += 1
-        if sent and quiet >= 4:
-            break  # response captured; output went quiet for ~1s
+        if sent and quiet >= 20:
+            break  # fallback only: ~5s of silence. Prefer the done marker below.
         continue
     quiet = 0
     try:
@@ -96,6 +96,8 @@ while time.time() < deadline:
     if not sent and b"<ready text>" in buffer:
         os.write(master_fd, b"help\n")
         sent = True  # keep reading so the transcript includes the response
+    if sent and b"<response done text>" in buffer:
+        break  # deterministic end, e.g. the prompt reappearing after the reply
 
 print(buffer.decode(errors="replace"))
 proc.terminate()
