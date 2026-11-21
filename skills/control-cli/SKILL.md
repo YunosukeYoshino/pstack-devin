@@ -76,10 +76,16 @@ os.close(slave_fd)
 
 deadline = time.time() + 30
 buffer = b""
+sent = False
+quiet = 0
 while time.time() < deadline:
     ready, _, _ = select.select([master_fd], [], [], 0.25)
     if not ready:
+        quiet += 1
+        if sent and quiet >= 4:
+            break  # response captured; output went quiet for ~1s
         continue
+    quiet = 0
     try:
         chunk = os.read(master_fd, 4096)
     except OSError:
@@ -87,9 +93,9 @@ while time.time() < deadline:
     if not chunk:
         break
     buffer += chunk
-    if b"<ready text>" in buffer:
+    if not sent and b"<ready text>" in buffer:
         os.write(master_fd, b"help\n")
-        break
+        sent = True  # keep reading so the transcript includes the response
 
 print(buffer.decode(errors="replace"))
 proc.terminate()
