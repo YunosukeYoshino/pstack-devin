@@ -18,7 +18,7 @@ skill 配置	.cursor/skills (project), ~/.cursor/skills (user)	.devin/skills (re
 diff/verify	同一 repo で Task subagent に委譲	子セッション or 自分で serial 実行。testing_agent で UI 記録	等価
 実行原則	Non-negotiables / 24 principles / Autonomy / Subagents / Writing the reply / 22 playbooks	全文 verbatim	完全一致
 ベースバージョン	本家 cursor/plugins pstack	v0.15.44 mirror（backnotprop/pstack 4a4f41c）ベース	なし（最新 mirror に追従）
-worker.md kickoff	全 agent の kickoff 1行目が "Read <path>/worker.md before anything else."（operator ルールを delegate に届ける）	子プロンプト1行目で find ~/.devin/plugins/cache -path '*/skills/poteto-mode/worker.md' を実行して読ませる（子 VM ではパスが違うので literal パスを渡さない）	等価。preamble 依存（enforced でなく指示）
+worker.md kickoff	全 agent の kickoff 1行目が "Read <path>/worker.md before anything else."（operator ルールを delegate に届ける）	子プロンプト1行目で find ~/.devin/plugins/cache -path '*/pstack*/skills/poteto-mode/worker.md' | sort | head -1 を実行して読ませる（子 VM ではパスが違うので literal パスを渡さない）	等価。preamble 依存（enforced でなく指示）
 名前付き agent (comment-sicko 等)	subagent_type: "comment-sicko" で登録済み agent を spawn	skills/pstack/agents/<name>.md 全文を子 brief に貼る	等価に近い。registry でなく brief 依存
 environment: "local"	ユーザーのローカル PC 上で動く agent	request_local_machine + local_* tools を親が直接使う（子には渡せない）	承認ゲートつき。並列性は失う
 fresh subagent	追加ラウンドは新しい subagent に元 brief + 追加指示 + 前回 report/branch を渡す	新しい devin_session_create 子。状態が必要な時のみ devin_session_interact で既存子を再開	等価

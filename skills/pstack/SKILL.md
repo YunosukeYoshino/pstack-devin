@@ -18,7 +18,7 @@ The one sanctioned exception is a builtin platform skill a tool itself requires 
 Locate the plugin root once per session (files persist for the session):
 
 ```bash
-PM=$(find ~/.devin/plugins/cache -type f -path '*/skills/poteto-mode/SKILL.md' | head -1)
+PM=$(find ~/.devin/plugins/cache -type f -path '*/pstack*/skills/poteto-mode/SKILL.md' | sort | head -1)
 PSTACK_SKILLS=${PM%/poteto-mode/SKILL.md}  # -> .../skills
 PSTACK_DIR=${PSTACK_SKILLS%/skills}         # -> plugin root
 # leaf skills: $PSTACK_SKILLS/<name>/SKILL.md
@@ -28,7 +28,7 @@ PSTACK_DIR=${PSTACK_SKILLS%/skills}         # -> plugin root
 # agents:      $PSTACK_SKILLS/pstack/agents/
 ```
 
-If that comes back empty, wait ~15 seconds and retry — plugin files materialize at session start and can lag behind the first command (`find` on a still-populating cache shows only `.tmp*` dirs). Then retry `find ~ -type f -path '*/skills/poteto-mode/SKILL.md'`. Still empty means the pstack-devin plugin did not materialize — tell the user and continue with the inline rules below.
+If that comes back empty, wait ~15 seconds and retry — plugin files materialize at session start and can lag behind the first command (`find` on a still-populating cache shows only `.tmp*` dirs). Then retry `find ~ -type f -path '*/pstack*/skills/poteto-mode/SKILL.md' | sort | head -1`. Still empty means the pstack-devin plugin did not materialize — tell the user and continue with the inline rules below.
 
 Path resolution contract — applies to every trigger, principle, and playbook mention in this file **and to any leaf file that itself names another skill**:
 
@@ -117,8 +117,8 @@ Read the leaf skill in full for any principle you apply (`$PSTACK_SKILLS/princip
 
 **On Devin there is no `subagent_type` registry.** Every kickoff you write for a child session, workflow worker, or other delegate starts with these lines, in order:
 
-1. `Run find ~/.devin/plugins/cache -type f -path '*/skills/poteto-mode/worker.md' | head -1 and read that file before anything else.` (upstream's `Read <path>/worker.md before anything else.`)
-2. For a `poteto-agent` (any subagent you spawn directly inside a playbook step): `Then run find ~/.devin/plugins/cache -type f -path '*/skills/pstack/SKILL.md' | head -1 and read that file in full, including its Principles section, before any work.`
+1. `Run find ~/.devin/plugins/cache -type f -path '*/pstack*/skills/poteto-mode/worker.md' | sort | head -1 and read that file before anything else.` (upstream's `Read <path>/worker.md before anything else.`)
+2. For a `poteto-agent` (any subagent you spawn directly inside a playbook step): `Then run find ~/.devin/plugins/cache -type f -path '*/pstack*/skills/pstack/SKILL.md' | sort | head -1 and read that file in full, including its Principles section, before any work.`
 3. For another named type (`comment-sicko` and the like): the full text of `$PSTACK_SKILLS/pstack/agents/<name>.md`, pasted in as the role brief.
 
 Then give the goal and the task. Children get fresh VMs. The plugin materializes at the same cache path there, so never pass your literal `$PSTACK_SKILLS` or `$PSTACK_DIR` into a child prompt. The chat that receives `@skills:pstack` runs the playbook itself. Routed workflow skills (`interrogate`, `swarm`) name their own `subagent_type`. Respect the role it names.
@@ -157,6 +157,7 @@ pstack was written for Cursor. You are Devin. Read Cursor-specific instructions 
 - **Skill folders.** Project skills live in `.devin/skills/`. Shared skills ship as uploaded plugins via `manage_plugin`. All pstack leaf skills are already bundled under `$PSTACK_SKILLS`. Never edit the installed plugin copy under `~/.devin/plugins/cache/`. Upstream fixes go to the pstack repo or the plugin's next revision.
 - **Questions.** `AskQuestion` means `message_user` with `content_type="user_question"` and clickable options. For open-ended questions use plain text. Never block the user for something an experiment can answer (see the fork trigger above). A delegate following `worker.md` never asks.
 - **Tools pstack doesn't ship.** `create-skill` is Cursor's built-in. On Devin use `manage_plugin` (`kind=skill`, scope personal or account) or drop a `SKILL.md` into the repo's `.devin/skills/`. `deslop`, `control-cli`, and `control-ui` are bundled as leaf skills (`$PSTACK_SKILLS/deslop`, `control-cli`, `control-ui`, ported from `cursor-team-kit`); their harness-agnostic steps map onto Devin surfaces: `computer` tool for GUI, Playwright over CDP at `http://localhost:29229`, a PTY shell (`exec` with `tty: true`) for CLIs and TUIs, `testing_agent` for recorded E2E. `/loop` → the `wait` tool between checks, or `devin_automation_manage` for a real recurring schedule. Cursor Custom Modes have no Devin equivalent; `@skills:pstack` is the mode. pstack scripts that assume a repo-local toolchain (e.g. `skills/poteto-mode/scripts/watch-pr`, `skills/statechart/scripts`) may need Bun or another TypeScript runtime. Check `scripts/package.json` before running.
+- **`make-bot-ui` is Cursor-only as written.** Its steps drive Cursor routines (`update_state`, `api2.cursor.sh` webhooks). On Devin the equivalent is an automation with an `webhook:incoming` trigger via `devin_automation_manage`, which spawns a session per POST. Treat the leaf's page/server/sender-key design as guidance and build the automation natively instead of following its Cursor steps.
 
 ## Writing the reply
 

@@ -75,7 +75,7 @@ Prefer `/pstack-devin:pstack` (the adapter) over `/pstack-devin:poteto-mode`: th
 | [`/pstack-devin:swarm`](./skills/swarm/SKILL.md) | you want N parallel workers on different slices, then one aggregated report. |
 | [`/pstack-devin:interrogate`](./skills/interrogate/SKILL.md) | you want different models to try to break a diff, keeping only proven findings. |
 | [`/pstack-devin:automate-me`](./skills/automate-me/SKILL.md) | you want your own `-mode` skill drafted from how you actually work. |
-| [`/pstack-devin:make-bot-ui`](./skills/make-bot-ui/SKILL.md) | you want a page or dashboard whose buttons wake a Devin session. |
+| [`/pstack-devin:make-bot-ui`](./skills/make-bot-ui/SKILL.md) | you want a page whose buttons wake an agent. Upstream-verbatim and Cursor-flavored — the adapter maps it to a `webhook:incoming` Devin Automation. |
 | [`/pstack-devin:setup-pstack`](./skills/setup-pstack/SKILL.md) | you want to pick which models pstack uses per role. |
 | [`/pstack-devin:reflect`](./skills/reflect/SKILL.md) | a long task landed and you want the recipe captured as a skill edit. |
 | [`/pstack-devin:correct`](./skills/correct/SKILL.md) | you keep correcting agents for the same mistakes; fixes each at the highest level that works. |
