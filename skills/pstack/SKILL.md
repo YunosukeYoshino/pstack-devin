@@ -11,6 +11,8 @@ Devin keeps exactly **one** skill active at a time — invoking another skill re
 
 Every leaf skill is also directly invocable as `/<plugin>:<name>` (e.g. `/pstack-devin:unslop`) — that's for the **user** typing a slash command, not for you mid-run. If the user invokes a leaf directly, follow that leaf and skip this adapter file.
 
+One caveat for the user: prefer `/pstack-devin:pstack` (this adapter) over `/pstack-devin:poteto-mode`. The raw `poteto-mode` leaf is upstream-verbatim — its harness section maps delegation to local subagents or serial work, not Devin child sessions. Only this adapter carries the Devin mappings.
+
 The one sanctioned exception is a builtin platform skill a tool itself requires (e.g. `dynamic-workflows`, `managing-child-sessions`). Invoking it swaps this skill out — invoke `pstack` again right after to resume, and treat the swap as a phase boundary.
 
 Locate the plugin root once per session (files persist for the session):
