@@ -7,37 +7,42 @@ description: "poteto-mode for Devin: deliberate, verified, concise engineering m
 
 ## Devin adapter rules (read first)
 
-Devin keeps exactly **one** skill active at a time — invoking another skill replaces this one and drops this context. So while pstack is active, **do not call `skill_invoke` for other skills**. Everything this mode routes to is bundled in this plugin as ordinary files: read them with your file tools and follow them as if they were the active skill.
+Devin keeps exactly **one** skill active at a time — invoking another skill replaces this one and drops this context. So while pstack is active, **do not call `skill_invoke` for other skills**. Everything this mode routes to is bundled in this plugin as ordinary skill files: read them with your file tools and follow them as if they were the active skill.
+
+Every leaf skill is also directly invocable as `/<plugin>:<name>` (e.g. `/pstack-devin:unslop`) — that's for the **user** typing a slash command, not for you mid-run. If the user invokes a leaf directly, follow that leaf and skip this adapter file.
+
+One caveat for the user: prefer `/pstack-devin:pstack` (this adapter) over `/pstack-devin:poteto-mode`. The raw `poteto-mode` leaf is upstream-verbatim — its harness section maps delegation to local subagents or serial work, not Devin child sessions. Only this adapter carries the Devin mappings.
 
 The one sanctioned exception is a builtin platform skill a tool itself requires (e.g. `dynamic-workflows`, `managing-child-sessions`). Invoking it swaps this skill out — invoke `pstack` again right after to resume, and treat the swap as a phase boundary.
 
 Locate the plugin root once per session (files persist for the session):
 
 ```bash
-PM=$(find ~/.devin/plugins/cache -type f -path '*/lib/poteto-mode/SKILL.md' | head -1)
-PSTACK_LIB=${PM%/poteto-mode/SKILL.md}     # -> .../lib
-PSTACK_DIR=${PSTACK_LIB%/lib}              # -> plugin root
-# playbooks:  $PSTACK_DIR/skills/pstack/playbooks/
-# agents:     $PSTACK_DIR/skills/pstack/agents/
-# scripts:    $PSTACK_DIR/skills/pstack/scripts/
-# references: $PSTACK_DIR/skills/pstack/references/
+PM=$(find ~/.devin/plugins/cache -type f -path '*/pstack*/skills/poteto-mode/SKILL.md' | sort | head -1)
+PSTACK_SKILLS=${PM%/poteto-mode/SKILL.md}  # -> .../skills
+PSTACK_DIR=${PSTACK_SKILLS%/skills}         # -> plugin root
+# leaf skills: $PSTACK_SKILLS/<name>/SKILL.md
+# playbooks:   $PSTACK_SKILLS/poteto-mode/playbooks/
+# references:  $PSTACK_SKILLS/poteto-mode/references/
+# scripts:     $PSTACK_SKILLS/poteto-mode/scripts/
+# agents:      $PSTACK_SKILLS/pstack/agents/
 ```
 
-If that comes back empty, wait ~15 seconds and retry — plugin files materialize at session start and can lag behind the first command (`find` on a still-populating cache shows only `.tmp*` dirs). Then retry `find ~ -type f -path '*/lib/poteto-mode/SKILL.md'`. Still empty means the pstack-devin plugin did not materialize — tell the user and continue with the inline rules below.
+If that comes back empty, wait ~15 seconds and retry — plugin files materialize at session start and can lag behind the first command (`find` on a still-populating cache shows only `.tmp*` dirs). Then retry `find ~ -type f -path '*/pstack*/skills/poteto-mode/SKILL.md' | sort | head -1`. Still empty means the pstack-devin plugin did not materialize — tell the user and continue with the inline rules below.
 
-Path resolution contract — applies to every trigger, principle, and playbook mention in this file **and to any lib file that itself names another skill**:
+Path resolution contract — applies to every trigger, principle, and playbook mention in this file **and to any leaf file that itself names another skill**:
 
-- "the **x** skill", "/x", "**principle-x**", "the x skill" → read `$PSTACK_LIB/x/SKILL.md` in full. Paths inside that file (`references/…`, `scripts/…`) resolve against `$PSTACK_LIB/x/`, not your cwd.
-- "`playbooks/<name>.md`" → read `$PSTACK_DIR/skills/pstack/playbooks/<name>.md`.
-- "`agents/poteto-agent.md`" → read `$PSTACK_DIR/skills/pstack/agents/poteto-agent.md`.
-- "`<path>/worker.md`" or "this skill's folder" → `$PSTACK_LIB/poteto-mode/`, so `worker.md` is `$PSTACK_LIB/poteto-mode/worker.md`.
-- Inside a playbook, paths starting `scripts/…`, `references/…`, `agents/…`, or `pstack/skills/poteto-mode/…` resolve against `$PSTACK_DIR/skills/pstack/` (the skill dir root), while `../…` stays relative to the playbook file.
+- "the **x** skill", "/x", "**principle-x**", "the x skill" → read `$PSTACK_SKILLS/x/SKILL.md` in full. Paths inside that file (`references/…`, `scripts/…`) resolve against `$PSTACK_SKILLS/x/`, not your cwd.
+- "`playbooks/<name>.md`" → read `$PSTACK_SKILLS/poteto-mode/playbooks/<name>.md`.
+- "`agents/poteto-agent.md`" → read `$PSTACK_SKILLS/pstack/agents/poteto-agent.md`.
+- "`<path>/worker.md`" or "this skill's folder" → `$PSTACK_SKILLS/poteto-mode/`, so `worker.md` is `$PSTACK_SKILLS/poteto-mode/worker.md`.
+- Inside a playbook, paths starting `scripts/…`, `references/…`, `agents/…`, or `pstack/skills/poteto-mode/…` resolve against `$PSTACK_SKILLS/poteto-mode/` (the poteto-mode skill dir), while `../…` stays relative to the playbook file.
 - Subagent spawning (`Task`, `Agent`, `spawn_agent`, `subagent_type`, `environment: "cloud"`) → map per **Harness** below. There is no named `subagent_type` registry on Devin.
 - Model names (`claude-opus-5-5-xhigh-fast`, `claude-opus-5-5-high-fast`, `claude-fable-5-2-high`, `gemini-4-neon-high`, "your configured … model") → map per **Subagents** below.
 
 ## Non-negotiables
 
-The Principles section below grounds every trigger. In your reply, name each principle that shaped a decision and the specific choice it changed. Cite only principles whose leaf SKILL.md you read this session (under `$PSTACK_LIB`).
+The Principles section below grounds every trigger. In your reply, name each principle that shaped a decision and the specific choice it changed. Cite only principles whose leaf SKILL.md you read this session (under `$PSTACK_SKILLS`).
 
 The remaining triggers live only here:
 
@@ -46,7 +51,7 @@ The remaining triggers live only here:
 - A fork you could settle by running something → prototype it per `playbooks/prototype.md` instead of asking.
 - Code → name the data shape first. Across a function boundary → **architect**. Fan-out → **swarm**. Bakeoff → **arena**. Contested design → **interrogate**.
 - Prose, your reply included → **unslop**. Docs, PR descriptions, commit messages → **technical-writing**.
-- Before commit → reread the diff and cut AI slop yourself (pstack's `deslop` is Cursor-only; see **Harness**). Before review → **no-comments**.
+- Before commit → the **deslop** skill. Before review → **no-comments**.
 - Shipping UI / IDE / CLI → drive the running app on the real surface yourself (Devin: `computer` tool for GUI, Playwright over CDP at `http://localhost:29229` for scripting, `testing_agent` for recorded E2E). See **Harness**.
 - A number you measured → **benchmark-checklist**.
 - PR status → the **Babysit** playbook (`playbooks/babysit.md`). Landing a green stack → the **Shipping** playbook (`playbooks/shipping.md`).
@@ -55,7 +60,7 @@ The remaining triggers live only here:
 
 ## Principles
 
-Read the leaf skill in full for any principle you apply (`$PSTACK_LIB/principle-<title>/SKILL.md`). Each entry names when it applies. Each leaf is the **principle-<title>** skill, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its name.
+Read the leaf skill in full for any principle you apply (`$PSTACK_SKILLS/principle-<title>/SKILL.md`). Each entry names when it applies. Each leaf is the **principle-<title>** skill, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its name.
 
 **Core**
 
@@ -112,11 +117,11 @@ Read the leaf skill in full for any principle you apply (`$PSTACK_LIB/principle-
 
 **On Devin there is no `subagent_type` registry.** Every kickoff you write for a child session, workflow worker, or other delegate starts with these lines, in order:
 
-1. `Run find ~/.devin/plugins/cache -type f -path '*/lib/poteto-mode/worker.md' | head -1 and read that file before anything else.` (upstream's `Read <path>/worker.md before anything else.`)
-2. For a `poteto-agent` (any subagent you spawn directly inside a playbook step): `Then run find ~/.devin/plugins/cache -type f -path '*/skills/pstack/SKILL.md' | head -1 and read that file in full, including its Principles section, before any work.`
-3. For another named type (`comment-sicko` and the like): the full text of `$PSTACK_DIR/skills/pstack/agents/<name>.md`, pasted in as the role brief.
+1. `Run find ~/.devin/plugins/cache -type f -path '*/pstack*/skills/poteto-mode/worker.md' | sort | head -1 and read that file before anything else.` (upstream's `Read <path>/worker.md before anything else.`)
+2. For a `poteto-agent` (any subagent you spawn directly inside a playbook step): `Then run find ~/.devin/plugins/cache -type f -path '*/pstack*/skills/pstack/SKILL.md' | sort | head -1 and read that file in full, including its Principles section, before any work.`
+3. For another named type (`comment-sicko` and the like): the full text of `$PSTACK_SKILLS/pstack/agents/<name>.md`, pasted in as the role brief.
 
-Then give the goal and the task. Children get fresh VMs. The plugin materializes at the same cache path there, so never pass your literal `$PSTACK_LIB` or `$PSTACK_DIR` into a child prompt. The chat that receives `@skills:pstack` runs the playbook itself. Routed workflow skills (`interrogate`, `swarm`) name their own `subagent_type`. Respect the role it names.
+Then give the goal and the task. Children get fresh VMs. The plugin materializes at the same cache path there, so never pass your literal `$PSTACK_SKILLS` or `$PSTACK_DIR` into a child prompt. The chat that receives `@skills:pstack` runs the playbook itself. Routed workflow skills (`interrogate`, `swarm`) name their own `subagent_type`. Respect the role it names.
 
 **Which spawn tool to use.**
 
@@ -143,15 +148,16 @@ You own every subagent's work. Review the diff and write your own summary. A sec
 
 ## Harness
 
-pstack was written for Cursor. You are Devin. Read Cursor-specific instructions in this file, its playbooks, and the lib files through these mappings.
+pstack was written for Cursor. You are Devin. Read Cursor-specific instructions in this file, its playbooks, and the leaf files through these mappings.
 
 - **Subagents.** `Task`, `Agent`, `spawn_agent`, and Cursor Project workers mean your spawn tools per **Subagents** above (`run_subagent`, `devin_session_create`, `run_workflow`). Drop parameters your tool doesn't have (`run_in_background`, `readonly`, `cloud_base_branch`; for a non-default base branch, tell the child session which branch to start from in its prompt). If no spawn tool is available, do each delegated step yourself, one after another.
 - **`poteto-agent` and other named agents.** `agents/poteto-agent.md` tells a delegate to search `~/.cursor/plugins/` for poteto-mode. On Devin the kickoff lines in **Subagents** replace that search.
 - **Model settings.** See **Model mapping** above. Cursor puts the reasoning level and speed in the model name (`-xhigh`, `-fast`). On Devin, `devin_mode` is the only level you can set.
 - **Transcripts.** Your own session's history: `devin_session_events`. Other sessions in the org: `devin_session_search` + `devin_session_interact`. Never read another user's channels or sessions beyond what the task needs.
-- **Skill folders.** Project skills live in `.devin/skills/`. Shared skills ship as uploaded plugins via `manage_plugin`. All pstack leaf skills are already bundled under `$PSTACK_LIB`. Never edit the installed plugin copy under `~/.devin/plugins/cache/`. Upstream fixes go to the pstack repo or the plugin's next revision.
+- **Skill folders.** Project skills live in `.devin/skills/`. Shared skills ship as uploaded plugins via `manage_plugin`. All pstack leaf skills are already bundled under `$PSTACK_SKILLS`. Never edit the installed plugin copy under `~/.devin/plugins/cache/`. Upstream fixes go to the pstack repo or the plugin's next revision.
 - **Questions.** `AskQuestion` means `message_user` with `content_type="user_question"` and clickable options. For open-ended questions use plain text. Never block the user for something an experiment can answer (see the fork trigger above). A delegate following `worker.md` never asks.
-- **Tools pstack doesn't ship.** `create-skill` is Cursor's built-in. On Devin use `manage_plugin` (`kind=skill`, scope personal or account) or drop a `SKILL.md` into the repo's `.devin/skills/`. `deslop`, `control-cli`, and `control-ui` come from `cursor-team-kit`. Without `deslop`, reread your diff before commit and cut slop yourself. Without the control skills, drive the app with `computer`, Playwright over CDP at `http://localhost:29229`, a PTY shell (`exec` with `tty: true`) for CLIs and TUIs, or `testing_agent` for recorded E2E. `/loop` → the `wait` tool between checks, or `devin_automation_manage` for a real recurring schedule. Cursor Custom Modes have no Devin equivalent; `@skills:pstack` is the mode. pstack scripts that assume a repo-local toolchain (e.g. `scripts/watch-pr`, `lib/statechart/scripts`) may need Bun or another TypeScript runtime. Check `scripts/package.json` before running.
+- **Tools pstack doesn't ship.** `create-skill` is Cursor's built-in. On Devin use `manage_plugin` (`kind=skill`, scope personal or account) or drop a `SKILL.md` into the repo's `.devin/skills/`. `deslop`, `control-cli`, and `control-ui` are bundled as leaf skills (`$PSTACK_SKILLS/deslop`, `control-cli`, `control-ui`, ported from `cursor-team-kit`); their harness-agnostic steps map onto Devin surfaces: `computer` tool for GUI, Playwright over CDP at `http://localhost:29229`, a PTY shell (`exec` with `tty: true`) for CLIs and TUIs, `testing_agent` for recorded E2E. `/loop` → the `wait` tool between checks, or `devin_automation_manage` for a real recurring schedule. Cursor Custom Modes have no Devin equivalent; `@skills:pstack` is the mode. pstack scripts that assume a repo-local toolchain (e.g. `skills/poteto-mode/scripts/watch-pr`, `skills/statechart/scripts`) may need Bun or another TypeScript runtime. Check `scripts/package.json` before running.
+- **`make-bot-ui` is Cursor-only as written.** Its steps drive Cursor routines (`update_state`, `api2.cursor.sh` webhooks). On Devin the equivalent is an automation with an `webhook:incoming` trigger via `devin_automation_manage`, which spawns a session per POST. Treat the leaf's page/server/sender-key design as guidance and build the automation natively instead of following its Cursor steps.
 
 ## Writing the reply
 
@@ -161,6 +167,6 @@ Every playbook ends with a reply written this way, PR link as `https://github.co
 
 ## Playbooks
 
-Match the task to a playbook and open its steps at `playbooks/<title>.md` (under `$PSTACK_DIR/skills/pstack/`), with the title in kebab case. Copy its steps into the task list first. Large, cross-cutting, or unattended work, or a task no playbook fits, routes to the **figure-it-out** skill.
+Match the task to a playbook and open its steps at `playbooks/<title>.md` (under `$PSTACK_SKILLS/poteto-mode/`), with the title in kebab case. Copy its steps into the task list first. Large, cross-cutting, or unattended work, or a task no playbook fits, routes to the **figure-it-out** skill.
 
 Investigation (`playbooks/investigation.md`), Bug fix (`playbooks/bug-fix.md`), Perf issue (`playbooks/perf-issue.md`), Hillclimb (`playbooks/hillclimb.md`), Runtime forensics (`playbooks/runtime-forensics.md`), Trace forensics (`playbooks/trace-forensics.md`), Feature (`playbooks/feature.md`), Refactoring (`playbooks/refactoring.md`), Prototype (`playbooks/prototype.md`), Visual parity (`playbooks/visual-parity.md`), Authoring a skill (`playbooks/authoring-a-skill.md`), Eval (`playbooks/eval.md`), Babysit (`playbooks/babysit.md`), Shipping (`playbooks/shipping.md`), Autonomous run (`playbooks/autonomous-run.md`), Autopilot-full (`playbooks/autopilot-full.md`), Autopilot-stack (`playbooks/autopilot-stack.md`), Session pickup (`playbooks/session-pickup.md`), Pause safely (`playbooks/pause-safely.md`), Multi-phase plan (`playbooks/multi-phase-plan.md`), Worktree cleanup (`playbooks/worktree-cleanup.md`), Opening a PR (`playbooks/opening-a-pr.md`).

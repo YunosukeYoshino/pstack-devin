@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Open an `upstream-sync` issue when backnotprop/pstack ships a version newer than lib/.
+# Open an `upstream-sync` issue when backnotprop/pstack ships a version newer than skills/.
 # Run by .github/workflows/upstream-check.yml; needs GH_TOKEN with issues:write.
 set -euo pipefail
 
@@ -39,14 +39,16 @@ if [[ -n "$open_issue" ]]; then
 fi
 
 upstream_skills="$(gh api "repos/$UPSTREAM/contents/skills" --jq '.[] | select(.type=="dir") | .name' | sort)"
-local_skills="$(find "$REPO_ROOT/lib" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)"
+# pstack/ is the adapter and deslop/control-*/ are cursor-team-kit ports — none exist upstream.
+local_skills="$(find "$REPO_ROOT/skills" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; \
+  | grep -vx -e pstack -e deslop -e control-cli -e control-ui | sort)"
 added="$(comm -13 <(echo "$local_skills") <(echo "$upstream_skills") | sed 's/^/- `/; s/$/`/')"
 removed="$(comm -23 <(echo "$local_skills") <(echo "$upstream_skills") | sed 's/^/- `/; s/$/`/')"
 
 upstream_poteto_sha="$(gh api "repos/$UPSTREAM/contents/skills/poteto-mode/SKILL.md" --jq .sha)"
-local_poteto_sha="$(git -C "$REPO_ROOT" hash-object lib/poteto-mode/SKILL.md)"
+local_poteto_sha="$(git -C "$REPO_ROOT" hash-object skills/poteto-mode/SKILL.md)"
 if [[ "$upstream_poteto_sha" == "$local_poteto_sha" ]]; then
-  poteto="No. \`skills/pstack/SKILL.md\` only needs a check for new lib references."
+  poteto="No. \`skills/pstack/SKILL.md\` only needs a check for new leaf references."
 else
   poteto="**Yes.** Re-apply the upstream changes to \`skills/pstack/SKILL.md\`."
 fi
@@ -54,7 +56,7 @@ fi
 [[ -n "${DRY_RUN:-}" ]] || gh label create "$LABEL" -R "$REPO" --color 1d76db --description "Upstream pstack has a newer version" 2>/dev/null || true
 
 body="$(cat <<MD
-Upstream [\`$UPSTREAM\`](https://github.com/$UPSTREAM) is at **$upstream_ver** (\`${upstream_sha:0:7}\`). \`lib/\` is at **$local_ver**.
+Upstream [\`$UPSTREAM\`](https://github.com/$UPSTREAM) is at **$upstream_ver** (\`${upstream_sha:0:7}\`). \`skills/\` is at **$local_ver**.
 
 Follow [docs/SYNCING.md](https://github.com/${GITHUB_REPOSITORY:-YunosukeYoshino/pstack-devin}/blob/main/docs/SYNCING.md).
 
