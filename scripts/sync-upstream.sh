@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Sync lib/ (and the bundled poteto-mode extras) from upstream pstack.
+# Sync skills/<leaf>/ from upstream pstack (poteto-mode's own extras included).
+# Managed-outside-upstream skill dirs are kept: pstack/ (the adapter) and
+# deslop/ control-cli/ control-ui/ (ported from cursor-team-kit via
+# pstack-ports/devin-pstack — sync those by hand from that repo).
 #   ./scripts/sync-upstream.sh            # backnotprop/pstack main (the mirror)
 #   ./scripts/sync-upstream.sh --cursor   # cursor/plugins pstack (skips mirror edits)
 set -euo pipefail
@@ -24,15 +27,12 @@ else
   UPSTREAM_SKILLS="$TMP/pstack/skills"
 fi
 
-# Every leaf skill -> lib/<name>/ (verbatim, tree structure kept so references/ resolve)
-rsync -a --delete --exclude .git "$UPSTREAM_SKILLS/" "$REPO_ROOT/lib/"
-
-# poteto-mode's own extras -> skills/pstack/{playbooks,references,scripts}
-for dir in playbooks references scripts; do
-  if [[ -d "$UPSTREAM_SKILLS/poteto-mode/$dir" ]]; then
-    rsync -a --delete "$UPSTREAM_SKILLS/poteto-mode/$dir/" "$REPO_ROOT/skills/pstack/$dir/"
-  fi
-done
+# Every leaf skill -> skills/<name>/ (verbatim, tree structure kept so
+# references/ resolve; each leaf is also directly invocable as /<plugin>:<name>).
+# Exclude dirs that don't come from upstream pstack.
+rsync -a --delete --exclude .git \
+  --exclude 'pstack/' --exclude 'deslop/' --exclude 'control-cli/' --exclude 'control-ui/' \
+  "$UPSTREAM_SKILLS/" "$REPO_ROOT/skills/"
 
 # repo-root agents/ -> skills/pstack/agents/ (the subagent briefs the adapter maps onto devin_session_create)
 UPSTREAM_AGENTS="${UPSTREAM_SKILLS%/skills}/agents"

@@ -2,6 +2,22 @@
 
 Tracks `version` in `.devin-plugin/plugin.json` (`<upstream>-devin.N`).
 
+## 0.15.44-devin.2
+
+- Restructure: `lib/` moved to `skills/` so every leaf skill is directly
+  invocable as `/<plugin>:<name>` (same UX as pstack-ports/devin-pstack).
+  The adapter still routes internal skill calls as file reads, so the
+  one-active-skill constraint is unchanged.
+- `skills/pstack/{playbooks,references,scripts}` removed — they were
+  byte-identical copies of `skills/poteto-mode/`'s own extras, which now
+  hold the canonical copies.
+- New bundled skills from `cursor-team-kit` (via pstack-ports/devin-pstack):
+  `deslop`, `control-cli`, `control-ui`. The adapter's Harness section now
+  points at them instead of saying they are missing.
+- `sync-upstream.sh` syncs upstream `skills/` into `skills/` directly
+  (excluding `pstack/` and the three cursor-team-kit ports) and drops the
+  duplicated poteto-mode extras pass.
+
 ## 0.15.44-devin.1
 
 - Sync `lib/` and `skills/pstack/{playbooks,references,scripts,agents}` to

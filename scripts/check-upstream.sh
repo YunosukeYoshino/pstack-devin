@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Open an `upstream-sync` issue when backnotprop/pstack ships a version newer than lib/.
+# Open an `upstream-sync` issue when backnotprop/pstack ships a version newer than skills/.
 # Run by .github/workflows/upstream-check.yml; needs GH_TOKEN with issues:write.
 set -euo pipefail
 
@@ -44,9 +44,9 @@ added="$(comm -13 <(echo "$local_skills") <(echo "$upstream_skills") | sed 's/^/
 removed="$(comm -23 <(echo "$local_skills") <(echo "$upstream_skills") | sed 's/^/- `/; s/$/`/')"
 
 upstream_poteto_sha="$(gh api "repos/$UPSTREAM/contents/skills/poteto-mode/SKILL.md" --jq .sha)"
-local_poteto_sha="$(git -C "$REPO_ROOT" hash-object lib/poteto-mode/SKILL.md)"
+local_poteto_sha="$(git -C "$REPO_ROOT" hash-object skills/poteto-mode/SKILL.md)"
 if [[ "$upstream_poteto_sha" == "$local_poteto_sha" ]]; then
-  poteto="No. \`skills/pstack/SKILL.md\` only needs a check for new lib references."
+  poteto="No. \`skills/pstack/SKILL.md\` only needs a check for new leaf references."
 else
   poteto="**Yes.** Re-apply the upstream changes to \`skills/pstack/SKILL.md\`."
 fi
