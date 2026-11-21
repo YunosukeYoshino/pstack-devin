@@ -76,13 +76,13 @@ os.close(slave_fd)
 
 deadline = time.time() + 30
 buffer = b""
-sent = False
+sent_at = None
 quiet = 0
 while time.time() < deadline:
     ready, _, _ = select.select([master_fd], [], [], 0.25)
     if not ready:
         quiet += 1
-        if sent and quiet >= 20:
+        if sent_at is not None and quiet >= 20:
             break  # fallback only: ~5s of silence. Prefer the done marker below.
         continue
     quiet = 0
@@ -93,10 +93,10 @@ while time.time() < deadline:
     if not chunk:
         break
     buffer += chunk
-    if not sent and b"<ready text>" in buffer:
+    if sent_at is None and b"<ready text>" in buffer:
         os.write(master_fd, b"help\n")
-        sent = True  # keep reading so the transcript includes the response
-    if sent and b"<response done text>" in buffer:
+        sent_at = len(buffer)  # search for the done marker only after this point
+    if sent_at is not None and b"<response done text>" in buffer[sent_at:]:
         break  # deterministic end, e.g. the prompt reappearing after the reply
 
 print(buffer.decode(errors="replace"))
