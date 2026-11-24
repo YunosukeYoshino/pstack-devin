@@ -56,56 +56,22 @@ Read the terminal output to find the inspector URL, then use Chrome DevTools-com
 
 ## Minimal PTY Harness
 
-Use a PTY script when you need deterministic waits in a repo that does not have tmux or a demo harness. Keep it temporary unless the user asks to add a reusable test.
+Use a PTY script when you need deterministic waits in a repo that does not have tmux or a demo harness. `scripts/pty_drive.py` next to this file implements the whole ready → send → done protocol and is covered by `scripts/test_pty_drive.py`; run it instead of writing your own loop:
 
-```python
-import os
-import pty
-import select
-import subprocess
-import time
-
-master_fd, slave_fd = pty.openpty()
-proc = subprocess.Popen(
-    ["<command>", "<arg>"],
-    stdin=slave_fd,
-    stdout=slave_fd,
-    stderr=slave_fd,
-    close_fds=True,
-)
-os.close(slave_fd)
-
-deadline = time.time() + 30
-buffer = b""
-sent_at = None
-quiet = 0
-while time.time() < deadline:
-    ready, _, _ = select.select([master_fd], [], [], 0.25)
-    if not ready:
-        quiet += 1
-        if sent_at is not None and quiet >= 20:
-            break  # fallback only: ~5s of silence. Prefer the done marker below.
-        continue
-    quiet = 0
-    try:
-        chunk = os.read(master_fd, 4096)
-    except OSError:
-        break  # child exited before ready; PTY drained (Linux raises EIO)
-    if not chunk:
-        break
-    buffer += chunk
-    if sent_at is None and b"<ready text>" in buffer:
-        os.write(master_fd, b"help\n")
-        sent_at = len(buffer)  # search for the done marker only after this point
-    if sent_at is not None and b"<response done text>" in buffer[sent_at:]:
-        break  # deterministic end, e.g. the prompt reappearing after the reply
-
-print(buffer.decode(errors="replace"))
-proc.terminate()
-os.close(master_fd)
+```bash
+# <skill-dir> is the directory containing this SKILL.md
+python3 <skill-dir>/scripts/pty_drive.py \
+  --cmd '<command-under-test>' \
+  --ready '<text that means the CLI is ready>' \
+  --send 'help' \
+  --done '<text that ends the reply, e.g. the prompt reappearing>'
 ```
 
-If the CLI needs richer terminal control, use `pty.fork()` or an existing PTY library.
+The transcript goes to stdout; stderr reports `outcome=done|quiet|child_exited|timeout`. Exit codes: 0 done or quiet fallback, 3 child exited before done (transcript still printed — this is how you keep crash diagnostics), 4 wall-clock timeout. Tune with `--timeout SECS` and `--quiet-limit TICKS` (0.25s each, default 20 ≈ 5s).
+
+The protocol details that have bitten before, now encoded and tested in the script: the done marker is matched only in output emitted *after* the input was sent (a done-looking banner does not end the session), the quiet timeout is a fallback rather than the primary end condition, reading continues after the input is sent so the response reaches the transcript, and a child that exits before ready still yields everything it printed.
+
+If the CLI needs richer terminal control than one input/response exchange, use `pty.fork()` or an existing PTY library.
 
 ## Profiling Recipes
 
