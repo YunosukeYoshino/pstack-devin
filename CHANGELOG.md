@@ -2,6 +2,17 @@
 
 Tracks `version` in `.devin-plugin/plugin.json` (`<upstream>-devin.N`).
 
+## 0.15.46-devin.1
+
+- Sync `skills/` and `skills/pstack/agents` to backnotprop/pstack 0.15.46
+  (`d164eec`), up from 0.15.44. No new or removed skills.
+- Upstream raised the Gemini panel seat from `gemini-4-neon-high` to
+  `gemini-4-neon-xhigh` (poteto-mode, arena, setup-pstack). The adapter's
+  model-name mapping and panel line now name `gemini-4-neon-xhigh`.
+- Upstream added `agents/openai.yaml` (Codex invocation policy) to each
+  skill. Mirrored verbatim; Devin ignores it.
+- statechart: POSIX launcher note for native Windows; watch-pr script fixes.
+
 ## 0.15.44-devin.2
 
 - Restructure: `lib/` moved to `skills/` so every leaf skill is directly

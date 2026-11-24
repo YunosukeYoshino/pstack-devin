@@ -149,7 +149,7 @@ The adapter preserves pstack's content verbatim and rewrites only the harness su
 
 ## Tracking upstream
 
-`skills/` currently mirrors [backnotprop/pstack](https://github.com/backnotprop/pstack) at v0.15.44, which itself tracks [`cursor/plugins/pstack`](https://github.com/cursor/plugins/tree/main/pstack). To refresh:
+`skills/` currently mirrors [backnotprop/pstack](https://github.com/backnotprop/pstack) at v0.15.46, which itself tracks [`cursor/plugins/pstack`](https://github.com/cursor/plugins/tree/main/pstack). To refresh:
 
 ```bash
 ./scripts/sync-upstream.sh            # from backnotprop/pstack main

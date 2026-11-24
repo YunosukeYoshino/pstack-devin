@@ -38,7 +38,7 @@ Path resolution contract — applies to every trigger, principle, and playbook m
 - "`<path>/worker.md`" or "this skill's folder" → `$PSTACK_SKILLS/poteto-mode/`, so `worker.md` is `$PSTACK_SKILLS/poteto-mode/worker.md`.
 - Inside a playbook, paths starting `scripts/…`, `references/…`, `agents/…`, or `pstack/skills/poteto-mode/…` resolve against `$PSTACK_SKILLS/poteto-mode/` (the poteto-mode skill dir), while `../…` stays relative to the playbook file.
 - Subagent spawning (`Task`, `Agent`, `spawn_agent`, `subagent_type`, `environment: "cloud"`) → map per **Harness** below. There is no named `subagent_type` registry on Devin.
-- Model names (`claude-opus-5-5-xhigh-fast`, `claude-opus-5-5-high-fast`, `claude-fable-5-2-high`, `gemini-4-neon-high`, "your configured … model") → map per **Subagents** below.
+- Model names (`claude-opus-5-5-xhigh-fast`, `claude-opus-5-5-high-fast`, `claude-fable-5-2-high`, `gemini-4-neon-xhigh`, "your configured … model") → map per **Subagents** below.
 
 ## Non-negotiables
 
@@ -137,7 +137,7 @@ Then give the goal and the task. Children get fresh VMs. The plugin materializes
 
 - Code, prose, and judgment (`claude-opus-5-5-xhigh-fast`) → the session default (`normal`). Raise to `ultra` only for the hardest or subtlest work.
 - Trivial mechanical edits and every verification run (`claude-opus-5-5-high-fast`, the `swarm workers` model) → `fast`, or `lite` for the most mechanical.
-- Diverse review and design panels (`claude-fable-5-2-high`, `claude-opus-5-5-high-fast`, `gemini-4-neon-high`) → one seat each on a different mode where accepted (`ultra`, `fast`, `fusion`). When modes are forced to inherit, keep the seats and diversify the briefs instead. Say so.
+- Diverse review and design panels (`claude-fable-5-2-high`, `claude-opus-5-5-high-fast`, `gemini-4-neon-xhigh`) → one seat each on a different mode where accepted (`ultra`, `fast`, `fusion`). When modes are forced to inherit, keep the seats and diversify the briefs instead. Say so.
 - **Fable 5.2 is an exception.** Its non-panel equivalent (`ultra` above the role's level) runs only when the user named it for this task or two `normal` runs of the same brief failed its check. Say which. Difficulty alone never qualifies.
 
 `devin_mode` can be rejected outright on some parents (mode-locked sessions force children to inherit). When it is, never pass it again for that child. Keep the tiering intent in the brief, proceed, and say so.
