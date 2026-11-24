@@ -6,6 +6,7 @@ set -euo pipefail
 UPSTREAM="${UPSTREAM:-backnotprop/pstack}"
 LABEL="${LABEL:-upstream-sync}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "$REPO_ROOT/scripts/adapter-skills.sh"
 
 local_full="$(jq -r .version "$REPO_ROOT/.devin-plugin/plugin.json")"
 local_ver="${local_full%%-devin.*}"
@@ -39,9 +40,8 @@ if [[ -n "$open_issue" ]]; then
 fi
 
 upstream_skills="$(gh api "repos/$UPSTREAM/contents/skills" --jq '.[] | select(.type=="dir") | .name' | sort)"
-# pstack/ is the adapter and deslop/control-*/ are cursor-team-kit ports — none exist upstream.
 local_skills="$(find "$REPO_ROOT/skills" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; \
-  | grep -vx -e pstack -e deslop -e control-cli -e control-ui | sort)"
+  | grep -vxF -f <(printf '%s\n' "${ADAPTER_SKILLS[@]}") | sort)"
 added="$(comm -13 <(echo "$local_skills") <(echo "$upstream_skills") | sed 's/^/- `/; s/$/`/')"
 removed="$(comm -23 <(echo "$local_skills") <(echo "$upstream_skills") | sed 's/^/- `/; s/$/`/')"
 

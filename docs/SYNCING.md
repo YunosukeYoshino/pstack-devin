@@ -20,10 +20,10 @@
 5. Check that every path the adapter names still exists:
 
    ```bash
-   grep -oE 'playbooks/[a-z0-9-]+\.md' skills/pstack/SKILL.md | sort -u | while read -r f; do [ -f "skills/poteto-mode/$f" ] || echo "missing: $f"; done
+   ./scripts/check-refs.sh
    ```
 
-   Add new playbooks to the **Playbooks** list. Remove deleted ones.
-6. Set `version` in `.devin-plugin/plugin.json` to `<upstream>-devin.1`, update the mirrored version in `README.md`, and add a `CHANGELOG.md` entry: upstream version, new or removed skills, adapter changes.
+   It covers the playbook list, agent briefs, adapter-owned dirs, `skills/` paths, stale references to the pre-`skills` layout, and version drift between `plugin.json`, `README.md` and `CHANGELOG.md`. CI runs it on every PR. Add new playbooks to the **Playbooks** list. Remove deleted ones.
+6. Set `version` in `.devin-plugin/plugin.json` to `<upstream>-devin.1`, update the mirrored version in `README.md`, and add a `CHANGELOG.md` entry: upstream version, new or removed skills, adapter changes. `check-refs.sh` fails if the three disagree.
 7. Open a PR whose body says `Closes #<issue>`. Run Devin Review and resolve every thread. Do not merge: the owner merges.
 8. Comment the PR link on the issue.
