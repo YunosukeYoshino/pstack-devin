@@ -64,6 +64,7 @@ Prefer `/pstack-devin:pstack` (the adapter) over `/pstack-devin:poteto-mode`: th
 | [`/pstack-devin:poteto-help`](./skills/poteto-help/SKILL.md) | you're new to pstack or unsure which skill, playbook, or principle fits. |
 | [`/pstack-devin:in-your-own-words`](./skills/in-your-own-words/SKILL.md) | you want the agent to play back your goal before it starts. |
 | [`/pstack-devin:sharpen`](./skills/sharpen/SKILL.md) | you want a prompt made deeper, not bigger, before you send it. |
+| [`/pstack-devin:reframe`](./skills/reframe/SKILL.md) | you want the expert words for what you're building, with checked sources, and your description rewritten with them. |
 | [`/pstack-devin:how`](./skills/how/SKILL.md) | you want a walkthrough of how a subsystem works. |
 | [`/pstack-devin:why`](./skills/why/SKILL.md) | you want to know why something was built this way, with cited evidence. |
 | [`/pstack-devin:recall`](./skills/recall/SKILL.md) | you want your recent context on a topic rebuilt as a tight current-state brief. |
@@ -149,7 +150,7 @@ The adapter preserves pstack's content verbatim and rewrites only the harness su
 
 ## Tracking upstream
 
-`skills/` currently mirrors [backnotprop/pstack](https://github.com/backnotprop/pstack) at v0.15.46, which itself tracks [`cursor/plugins/pstack`](https://github.com/cursor/plugins/tree/main/pstack). To refresh:
+`skills/` currently mirrors [backnotprop/pstack](https://github.com/backnotprop/pstack) at v0.15.48, which itself tracks [`cursor/plugins/pstack`](https://github.com/cursor/plugins/tree/main/pstack). To refresh:
 
 ```bash
 ./scripts/sync-upstream.sh            # from backnotprop/pstack main

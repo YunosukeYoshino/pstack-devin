@@ -2,6 +2,15 @@
 
 Tracks `version` in `.devin-plugin/plugin.json` (`<upstream>-devin.N`).
 
+## 0.15.48-devin.1
+
+- Sync `skills/` and `skills/pstack/agents` to backnotprop/pstack 0.15.48
+  (`c81f1bf`), up from 0.15.46.
+- New skill `reframe` (expert vocabulary for what you're building, with
+  checked citations, then a rewritten description). Listed in README.
+  poteto-help now routes to it. No removed skills.
+- poteto-mode `SKILL.md` is unchanged, so the adapter needed no edits.
+
 ## 0.15.46-devin.1
 
 - Sync `skills/` and `skills/pstack/agents` to backnotprop/pstack 0.15.46
